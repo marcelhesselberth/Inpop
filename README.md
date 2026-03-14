@@ -1,4 +1,4 @@
-### NAME
+### Inpop
 Inpop - Calculate planet positions, lunar librations and time transformations using the INPOP ephemeris.
 
 ### SYNOPSIS

@@ -23,7 +23,7 @@ from configparser import ConfigParser
 
 
 CONFIGFILE = "inpop.ini"  # In the installation directory
-FILE_TRESHOLD = 50e6      # Bytes
+FILE_THRESHOLD = 50e6      # Bytes
 
 
 lpath = path.realpath(path.dirname(__file__))  # The path to this library
@@ -110,9 +110,9 @@ def calcm(jd, jd2, offset, ncoeffs, ngranules, data,
     jd0 = jdl + granule * span
     tc = 2 * (((jd-jd0) + jd2) / span) - 1
     gaddr = int(raddr + (offset - 1 + 3 * granule * ncoeffs))
-    cx = np.copy(data[gaddr: gaddr + ncoeffs])
-    cy = np.copy(data[gaddr + ncoeffs: gaddr + 2 * ncoeffs])
-    cz = np.copy(data[gaddr + 2 * ncoeffs: gaddr + 3 * ncoeffs])
+    cx = np.ascontiguousarray(data[gaddr: gaddr + ncoeffs])
+    cy = np.np.ascontiguousarray(data[gaddr + ncoeffs: gaddr + 2 * ncoeffs])
+    cz = np.np.ascontiguousarray(data[gaddr + 2 * ncoeffs: gaddr + 3 * ncoeffs])
     T, D = chpoly(tc, ncoeffs)
     T = np.ascontiguousarray(T)
     D = np.ascontiguousarray(D)
@@ -153,7 +153,7 @@ class Inpop:
                    If True, the file is completely loaded into memory.
                    If false, the file is accessed fully through seek operations.
                    The default is None, which loads the file in memory if the
-                   file size is below FILE_TRESHOLD (about 50MB).
+                   file size is below FILE_THRESHOLD (about 50MB).
 
         Returns
         -------
@@ -190,7 +190,7 @@ class Inpop:
             raise (FileNotFoundError(filename))
 
         if not isinstance(load, bool):
-            if size > FILE_TRESHOLD:
+            if size > FILE_THRESHOLD:
                 load = False
             else:
                 load = True
@@ -241,7 +241,7 @@ class Inpop:
         try:
             urllib.request.urlretrieve(url, filename)
         except:
-            pass  # results in FileNotFoundError
+            raise FileNotFoundError
         return filename
 
     def open(self):
@@ -465,8 +465,8 @@ class Inpop:
         """
         jd = jd1 + jd2
         if jd < self.jd_beg or jd > self.jd_end:
-            raise (ValueError("Julian date outside file span, must be between \
-                              %.1f and %.1f." % (self.jd_beg, self.jd_end)))
+            raise (ValueError(f"Julian date outside file span, must be between"
+                              f"{self.jd_beg:.1f} and {self.jd_end:.1f}"))
         offset, ncoeffs, ngranules = coeff_ptr
         if self.mem:
             pos, vel = calcm(jd1, jd2, offset, ncoeffs, ngranules,
@@ -485,12 +485,12 @@ class Inpop:
         self.file.seek(raddr)
         bytestr = self.file.read(self.jd_struct.size)  # read record limits
         jdl, jdh = self.jd_struct.unpack(bytestr)
-        assert (jd >= jdl and jd <= jdh)  # check
+        # assert (jd >= jdl and jd <= jdh)  # check
         span = self.interval / ngranules
         granule = int(((jd1 - jdl) + jd2) // span)  # compute the granule
         jd0 = jdl + granule * span
         tc = 2 * (((jd1-jd0) + jd2) / span) - 1  # Chebyshev time in granule
-        assert (tc >= -1 and tc <= 1)
+        # assert (tc >= -1 and tc <= 1)
         gaddr = int(raddr+(offset - 1 + 3 * granule * ncoeffs) * 8)  # -1 for C
         self.file.seek(gaddr)  # read 3 * ncoeffs 8 bit doubles
         coeffs = np.frombuffer(self.file.read(24 * ncoeffs), dtype=np.double)
@@ -499,12 +499,11 @@ class Inpop:
         T, D = chpoly(tc, ncoeffs)  # 2 x ncoeffs
         pos = np.dot(coeffs, T)
         if rate:
-            #print("bar")
             vel = np.dot(coeffs, D) * ngranules * self.rate_factor
             return np.array([pos, vel], dtype=np.double)
-        #print("foo")
         return pos
 
+    @staticmethod
     def jd_unpack(jd):
         """
         Decode Julian date.
@@ -630,11 +629,11 @@ class Inpop:
             if timescale == self.timescale:
                 gr_pos_factor = 1
             elif timescale == "TCB" and self.timescale == "TDB":
-                TDBmTCB = -Lb * ((jd - T0) + jd2) + TDB0_jd
+                TDBmTCB = -Lb * ((jd1 - T0) + jd2) + TDB0_jd
                 jd2 += TDBmTCB
                 gr_pos_factor = 1 / (1 - Lb)
             elif timescale == "TDB" and self.timescale == "TCB":
-                TCBmTDB = LKb * ((jd - T0) + jd2) - TDB0_jd  # / Kb
+                TCBmTDB = LKb * ((jd1 - T0) + jd2) - TDB0_jd  # / Kb
                 jd2 += TCBmTDB
                 gr_pos_factor = 1 / (1 + LKb)  # Kb
             else:

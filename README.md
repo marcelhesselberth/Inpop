@@ -1,5 +1,10 @@
 # Inpop
 
+![Python](https://img.shields.io/badge/python-3.8%2B-blue)
+![NumPy](https://img.shields.io/badge/dependency-numpy-orange)
+![License](https://img.shields.io/badge/license-GPL-green)
+![Status](https://img.shields.io/badge/status-stable-brightgreen)
+
 Compute high-precision planetary positions, lunar librations, and relativistic time transformations using the INPOP ephemerides.  
 
 **Install via pip:**  
@@ -11,7 +16,7 @@ pip3 install Inpop
 
 ## Project description
 
-**Inpop** is a Python library for **computing high-precision planetary positions, lunar librations, and relativistic time transformations** using the "Institut de mécanique céleste et de calcul des éphémérides"] (IMCCE) INPOP ephemerides.  
+**Inpop** is a pure Python library for **computing high-precision planetary positions, lunar librations, and relativistic time transformations** using the "Institut de mécanique céleste et de calcul des éphémérides"] (IMCCE) INPOP ephemerides.  
 
 INPOP ephemerides are distributed as binary `.dat` files containing Chebyshev coefficients, which parameterize the barycentric motion of solar system bodies over fixed time intervals. Inpop reads these coefficients, evaluates the Chebyshev series, and computes positions, velocities, libration angles, and time transformations.  
 
@@ -178,7 +183,7 @@ Units are automatically converted to AU, AU/day, seconds, and radians.
 
 ## Citation
 
-Please cite INPOP if using this library in scientific work:
+Please cite INPOP if using it in scientific work:
 
 Fienga, A., et al. (2019). INPOP planetary ephemerides. *Celestial Mechanics and Dynamical Astronomy*, 130(12). https://doi.org/10.1007/s10569-019-09921-2  
 
@@ -188,7 +193,7 @@ INPOP ephemerides are produced by the "Institut de mécanique céleste et de cal
 
 ## Author
 
-Marcel Hesselberth  
+Marcel Hesselberth
 
 - GitHub: [https://github.com/hesselberth/Inpop](https://github.com/hesselberth/Inpop)
 - Pypi: [https://pypi.org/project/Inpop/]
@@ -199,5 +204,5 @@ Marcel Hesselberth
 ## License
 
 - GPLv3: [https://www.gnu.org/licenses/gpl-3.0.txt](https://www.gnu.org/licenses/gpl-3.0.txt)  
-- Free software: no warranty
+- Free software: no warranty.
 

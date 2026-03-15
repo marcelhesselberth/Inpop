@@ -111,8 +111,8 @@ def calcm(jd, jd2, offset, ncoeffs, ngranules, data,
     tc = 2 * (((jd-jd0) + jd2) / span) - 1
     gaddr = int(raddr + (offset - 1 + 3 * granule * ncoeffs))
     cx = np.ascontiguousarray(data[gaddr: gaddr + ncoeffs])
-    cy = np.np.ascontiguousarray(data[gaddr + ncoeffs: gaddr + 2 * ncoeffs])
-    cz = np.np.ascontiguousarray(data[gaddr + 2 * ncoeffs: gaddr + 3 * ncoeffs])
+    cy = np.ascontiguousarray(data[gaddr + ncoeffs: gaddr + 2 * ncoeffs])
+    cz = np.ascontiguousarray(data[gaddr + 2 * ncoeffs: gaddr + 3 * ncoeffs])
     T, D = chpoly(tc, ncoeffs)
     T = np.ascontiguousarray(T)
     D = np.ascontiguousarray(D)

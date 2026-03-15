@@ -10,7 +10,7 @@ Created on Fri Dec  4 14:16:35 2024
 Version: 1.0 (stable). 
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 
 from .constants import Lb, LKb, T0, TDB0_jd

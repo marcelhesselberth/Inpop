@@ -1,116 +1,131 @@
-### Inpop
-Calculate planet positions, lunar librations and time transformations using the INPOP ephemeris.
+# Inpop
 
-### SYNOPSIS
-Inpop is a Python package for calculating planetary positions using the very high precision INPOP ephemerides. These ephemerides are produced and published by IMCCE (https://ftp.imcce.fr/pub/ephem/planets/). INPOP files contain Chebyshev coefficients that parametrize the position of the solar system bodies as well as the libration angles of the moon.
+Compute high-precision planetary positions, lunar librations, and relativistic time transformations using the INPOP ephemerides.  
 
-Because the underlying models are based in general relativity, (most) INPOP files also contain time transformations. Since these depend on the positions of the solar system bodies, INPOP is a 4D ephemeris. INPOP files are available in the TCB or TDB timescales. TCB files contain the transformation TCG-TCB (TCGmTDB) and TDB files contain the transformation TT-TDB (TTmTDB). INPOP .dat files are published in big-endian and little-endian byte order and in both a -100 / +100 year time span and a -1000 / +1000 year time span. Files of the latter type typically do not support the time scale transformations needed for the very high precision applications. Inpop aims to support all INPOP binary (.dat) files.
+**Install via pip:**  
+```bash
+pip3 install Inpop
+```
 
-The Inpop library is not aimed towards the end user who wants to compute an apparent solar system position from a Gregorian calendar date and time. It rather is the machinery underneath those calculations. As such, this documentation is aimed at software developers with expertise in the field of astrometry.
+---
 
-#### REQUIREMENTS
-Inpop depends on Numpy. Numba is not required but will result in a speedup when the file is loaded into memory.
+## Project description
 
-#### PROVIDES
-The inpop package provides a single class: Inpop. Besides positions, libration angles and time transformations it also computes the first order derivatives.
+**Inpop** is a Python library for **computing high-precision planetary positions, lunar librations, and relativistic time transformations** using the "Institut de mécanique céleste et de calcul des éphémérides"] (IMCCE) INPOP ephemerides.  
 
-### DESCRIPTION
-An Inpop constructor is called with a binary INPOP (.dat) file name as its argument:
+INPOP ephemerides are distributed as binary `.dat` files containing Chebyshev coefficients, which parameterize the barycentric motion of solar system bodies over fixed time intervals. Inpop reads these coefficients, evaluates the Chebyshev series, and computes positions, velocities, libration angles, and time transformations.  
+
+Inpop is primarily designed for **astrometry, celestial mechanics, and spacecraft navigation software**, providing direct access to the underlying ephemeris data rather than high-level astronomical reductions.
+
+---
+
+## Downloading INPOP files
+
+INPOP `.dat` files can be downloaded from the IMCCE FTP server:  
+[https://ftp.imcce.fr/pub/ephem/planets/](https://ftp.imcce.fr/pub/ephem/planets/)
+
+If the file is not found locally, the Inpop library will attempt to download it automatically to a writable directory.
+
+---
+
+## Requirements
+
+- Python 3.8+  
+- [NumPy](https://numpy.org/)  
+- [Numba](https://numba.pydata.org/) (optional, for just-in-time acceleration when loading data into memory)  
+
+---
+
+## Provides
+
+The package provides a single class, `Inpop`. It can compute:
+
+- Planetary positions (AU)  
+- Velocities (AU/day)  
+- Lunar libration angles (rad)  
+- Time transformations (TT–TDB, TCG–TCB)  
+- First-order derivatives of all above quantities  
+
+---
+
+## Quickstart
 
 ```python
 from inpop import Inpop
+
+# Open a small INPOP file (auto-download if not present)
 inpop = Inpop("inpop21a_TDB_m100_p100_tt.dat")
+
+# Inspect available time range and timescale
+print(inpop.jd_beg, inpop.jd_end)  # Julian dates
+print(inpop.timescale)             # TDB or TCB
+
+# Compute state vector: moon relative to earth at J2000.0
+pv = inpop.PV(2451545.0, 'moon', 'earth')
+print(pv)
 ```
 
-This will open the INPOP file. If the file is not found it will be downloaded automatically to the path given (if the path is writable). It is allowed to omit the filename completely, in this case the most recent 200 year TDB file is opened in the current working directory or, if not found, it is first downloaded to this location. Small INPOP files (-100 / +100 years) are loaded into memory for fast calculations, accelerated by just-in-time compilation through the LLVM compiler and Numba. If Numba is not available on the system the speedup by holding the file in memory will be significantly smaller.
+---
 
-It is possible to keep the data fully on disk and use seek operations to read the data into buffers:
+## How Inpop works
 
-```python
-from inpop import Inpop
-inpop = Inpop("inpop21a_TDB_m100_p100_tt.dat", load=False)
-```
-
-Similarly, large files (-1000 / +1000 years) can be forced into memory by specifying `load=True`.
-
-Once the Inpop class is initiated you can inspect the time range for which the INPOP file has data:
-
-```python
-print(inpop.jd_beg, inpop.jd_end)
-2414105.0 2488985.0
-```
-
-The time range is given in Julian days in the ephemeris time scale (TDB or TCB). The time scale of this file is TDB:
-
-```python
-print(inpop.timescale)
-TDB
-```
-
-The following important constants are always present:
-
-```python
-print(inpop.AU, inpop.EMRAT)
-149597870.7 81.30056789872074
-```
-
-Besides these constants INPOP files have a constant record which can be accessed through a dictionary:
-
-```python
-print(inpop.constants)
-{'KSIZER': 1226.0, 'VERSIO': 21.1, 'FVERSI': 0.0, 'FORMAT': 11.0, 'UNITE': 1.0, 'TIMESC': 0.0, 'REDATE': 2021.0624, 'CLIGHT': 299792.458, 'GM_Mer': 4.91248045036476e-11, ...
-```
-
-The constant record contains up to 400 values used during the ephemeris integration:
-
-```python
-print(len(inpop.constants))
-400
-```
-
-### The `info()` method
-Further details about the internals of the file can be obtained through the `info` member function:
+INPOP files contain Chebyshev coefficients for each body over fixed intervals. Inpop evaluates these polynomials to compute positions, velocities, and time corrections.
 
 ```
-INPOP file             inpop21a_TDB_m100_p100_tt.dat
-Byte order             Little-endian
-Label                  ['INPOP21a', '', '']
-JDbeg, JDend, interval 2414105.0, 2488985.0, 32.0
-record_size            1226
-num_const              400
-AU, EMRAT              149597870.7, 81.30056789872074
-DENUM                  100
-librat_ptr             [819  10   4]
-TTmTDB_ptr             [939  12   8]
-version                21.1
-fversion               0.0
-format                 11.0
-KSIZER                 1226
-UNITE                  1
-has_vel                False
-has_time               True
-has_asteroids          False
-unit_pos               au
-unit_vel               au/day
-unit_time              s
-unit_angle             rad
-timescale              TDB
+INPOP .dat file
+       │
+       │  Chebyshev coefficients
+       ▼
++-----------------------+
+|    Inpop library      |
+|                       |
+|  • file reader        |
+|  • Chebyshev eval     |
+|  • time transforms    |
++-----------------------+
+       │
+       ▼
+Computed quantities
+
+  • planetary position (AU)
+  • velocity (AU/day)
+  • lunar libration angles (rad)
+  • TT–TDB or TCG–TCB time offsets
 ```
 
-All of these are instance variables. As can be seen this file has a time conversion from TT to TDB (`has_time` is `True`) and units of position, velocity, time and angle are au, au/day, seconds and radians respectively. This is always the case, even if `UNITE == 0` (meaning file units are km and km/day). Units will be automatically converted to au and au/day.
+Workflow:
 
-#### `__str__()`
-
-Above information can be obtained by:
-
-```python
-print(inpop)
+```
+Julian date
+     │
+     ▼
+select Chebyshev segment
+     │
+     ▼
+evaluate polynomial series
+     │
+     ▼
+state vector (position, velocity)
 ```
 
-#### `PV(jd, target, center, rate=True, **kwargs)`
-This method computes the state (position and velocity) of a solar system body (the target) with respect to another solar system body (the center) at time jd. jd is the Julian date in the ephemeris time scale (TDB or TCB). Because of the limited precision of a `double` it is advised to split the Julian date in a day part and a time fraction if sub-millisecond accuracy is required. In that case jd should be a `tuple` or an `np.array(dtype=np.double)` of length 2. The first item is the date, the second one the time fraction.
+---
 
-`target` and `center` are integers from 0 to 12. The state vectors are returned as a numpy array [P, V] of type np.double. P and V are both 3-vectors containing the position and velocity respectively. The encoding for the target and the center is as follows:
+## Accuracy and verification
+
+- Double-precision arithmetic  
+- Numerical errors: ~2e-14 AU for positions, sub-microsecond for time over 200 years  
+- For sub-millisecond timing, pass Julian dates as `[day, fraction]` for maximum precision  
+
+---
+
+## Core methods
+
+### `PV(jd, target, center, rate=True, ts=None)`
+
+Compute the state vector of a solar system body (`target`) relative to another (`center`) at time `jd`.  
+
+- Returns `[P, V]` if `rate=True`, or position vector `P` if `rate=False`.  
+- `target` and `center` can be integers 0–12 or strings:  
 
 ```
  0 mercury
@@ -128,92 +143,61 @@ This method computes the state (position and velocity) of a solar system body (t
 12 emb
 ```
 
-If the above strings are passed to `PV` they will be converted automatically to the integer codes. For example, the position of the moon with respect to the earth on January 1 2000 at 12:00 TDB time was:
+- Optional `ts` keyword: `"TDB"` or `"TCB"` to force timescale conversion.
+
+### `LBR(jd, rate=True, ts=None)`
+
+Compute the **physical libration angles** of the moon. Returns angles in radians and optionally angular velocities.
+
+### `TTmTDB(tt_jd, rate=False)`
+
+Time difference between **TT and TDB** in seconds, evaluated at `tt_jd`.
+
+### `TCGmTCB(tcg_jd, rate=False)`
+
+Time difference between **TCB and TCG** in seconds.
+
+### `close()`, `__del__()`
+
+Close the INPOP file safely.
+
+---
+
+## Constants
+
+Access key constants directly:
 
 ```python
-print(inpop.PV(2451545.0, 'moon', 'earth'))
-[[-0.0019492816590940113 -0.0017828919060276236 -0.0005087136946011068]
- [ 0.0003716704750190104 -0.0003846978294553674 -0.0001740301567948636]]
+print(inpop.AU, inpop.EMRAT)
+print(inpop.constants)  # dictionary of up to 400 ephemeris constants
 ```
 
-The first row is the position in AU, the second row the velocity in AU/day. The distance between the moon and the earth at that moment was:
+Units are automatically converted to AU, AU/day, seconds, and radians.
 
-```python
-import numpy as np
-print(np.linalg.norm(inpop.PV(2451545.0, 'moon', 'earth')[0] * inpop.AU))
-402448.639909165  # km`
-```
+---
 
-If the velocity is not required it can be left out as follows:
-```python
-print(inpop.PV(2451545.0, 'moon', 'earth', rate=False))
-[-0.0019492816590940113 -0.0017828919060276236 -0.0005087136946011068]
-```
+## Citation
 
-Because the INPOP file opened above contains TDB data (`self.timescale == "TDB"`), the result is given in the dynamical system. Note that there is a rate difference between TDB and TCB clocks and according to general relativity a scale difference occurs between the positions (and masses) as well. Although the correction is of order 1e-8 this falls well within the numerical and data precision of Inpop.
+Please cite INPOP if using this library in scientific work:
 
-By passing the keyword argument `ts` it is possible to force the result in a specific timescale:
+Fienga, A., et al. (2019). INPOP planetary ephemerides. *Celestial Mechanics and Dynamical Astronomy*, 130(12). https://doi.org/10.1007/s10569-019-09921-2  
 
-```python
-print(np.linalg.norm(inpop.PV(2451545.0, 'moon', 'earth', rate=False, ts="TCB") * inpop.AU))
-402448.2845950923 # km
-```
+INPOP ephemerides are produced by the "Institut de mécanique céleste et de calcul des éphémérides" (IMCCE).
 
-There is a difference of 355.314 meters between these distances. The numerical precision for the earth-moon positions is in the 10 um range, much more precise than the best available measurements. In case you're puzzled about the magnitude of this difference: the scaling applies to the solar system barycentric distances of moon and earth.
+---
 
-Note that the TDB-TCB conversions degrade numerical accuracy somewhat, to the 1e-13 AU range for Pluto at ~50 AU distance. For maximum accuracy it is advised to use INPOP ephemeris files for the time scale in which data is required.
+## Author
 
-#### `LBR(jd, rate=True)`
-This method computes the physical libration angles of the moon. jd is again the Julian date in the ephemeris time scale. Note that since the earth and the moon rotate in the ICRF, the z-component winds linear in time with an oscillatory component superimposed. The angles are given in radians:
+Marcel Hesselberth  
 
-```python
-print(inpop.LBR(2451545.0))
-[[-5.4147737920634452e-02  4.2485576628776955e-01  7.1866746406895576e-01]
- [-1.1684365616883440e-04  4.5189513573293875e-05  2.3009987407557086e-01]]
-```
+- GitHub: [https://github.com/hesselberth/Inpop](https://github.com/hesselberth/Inpop)
+- Pypi: [https://pypi.org/project/Inpop/]
+- Bugs / issues: [GitHub issues](https://github.com/hesselberth/Inpop/issues)  
 
-For increased time accuracy, again pass jd as `np.array([date, time_fraction], dtype=np.double)`. Like `PV`,`LBR` accepts the keyword argument `ts`.
+---
 
-#### `TTmTDB(tt_jd, rate=False)`
-Time difference between the TT (terrestrial time) and TDB (barycentric dynamical time) scales, computed from the Julian date in TT. TT and TDB tick on average at the same rate but over the year there are relativistic drifts of the order of a millisecond. TDB = TT - TTmTDB(tt_jd). Given the small correction and the slow change the function can be used both ways. The correction is given in seconds.
+## License
 
-```python
-print(inpop.TTmTDB(2451545.0))
-9.928893069898122e-05  # seconds
-```
+- GPLv3: [https://www.gnu.org/licenses/gpl-3.0.txt](https://www.gnu.org/licenses/gpl-3.0.txt)  
+- Free software: no warranty
 
-The accuracy of this result is better than 100ns for the past and next century.
-For high precision, pass jd as a date and time array of length 2 (`np.array([date, time_fraction], dtype=np.double)`).
-
-#### `TCGmTCB(tcg_jd, rate=False)`
-Time difference between the TCB (barycentric coordinate time) and TCG (geocentric coordinate time) scales.
-Again, for high precision, pass jd as a date/time array of length 2 (`np.array([date, time_fraction], dtype=np.double)`).
-
-#### `close()`
-Closes the INPOP file (if it was still open).
-
-#### `__del__()`
-Destructor, makes sure there are no dangling file pointers
-
-#### A word about precision
-Inpop is fully written in python and uses double precision arithmetic. When running tests against reference data the numerical errors are 2e-14 AU for positions and sub-us level for time over 2 centuries. If sub-ms precision is required, 2 floats should be used for the date. The first one can be used for pseudo-integer date arithmetic and the second one for the day fraction. The library will subtract day offsets from the first jd argument without error and then add the day fraction to a much smaller date, resulting in high precision calculations.
-
-### AUTHOR
-Inpop is written by Marcel Hesselberth.
-
-### REPORTING BUGS
-Inpop online help: https://github.com/hesselberth/Inpop/issues
-
-### COPYRIGHT
-Marcel Hesselberth.
-
-1. Inpop is released under GPLv3. The text of the license can be found at https://www.gnu.org/licenses/gpl-3.0.txt .
-   This is free software: you are free to change and redistribute it. There is NO WARRANTY.
-
-2. The software neither has any relation to IMCCE nor to Leiden University.
-
-3. INPOP data and other files on the IMCCE web server are the intellectual property of the IMCCE. For their conditions of use, see https://www.imcce.fr/mentions-legales.
-
-### SEE ALSO
-CIP, CNAV and the documentation in inpop.py.
-https://www.github.com/hesselberth/

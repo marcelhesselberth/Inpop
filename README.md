@@ -20,7 +20,7 @@ pip3 install Inpop
 
 INPOP ephemerides are distributed as binary `.dat` files containing Chebyshev coefficients, which parameterize the barycentric motion of solar system bodies over fixed time intervals. Inpop reads these coefficients, evaluates the Chebyshev series, and computes positions, velocities, libration angles, and time transformations.  
 
-Inpop is primarily designed for **astrometry, celestial mechanics, and spacecraft navigation software**, providing direct access to the underlying ephemeris data rather than high-level astronomical reductions.
+Inpop is primarily designed for **astrometry, celestial mechanics, and navigation software**, providing direct access to the underlying ephemeris data rather than high-level astronomical reductions.
 
 ---
 

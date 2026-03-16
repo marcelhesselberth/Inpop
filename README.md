@@ -2,7 +2,7 @@
 
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
 ![NumPy](https://img.shields.io/badge/dependency-numpy-orange)
-![License](https://img.shields.io/badge/license-GPL-green)
+![License](https://img.shields.io/badge/license-GPLv3-green)
 ![Status](https://img.shields.io/badge/status-stable-brightgreen)
 
 Compute high-precision planetary positions, lunar librations, and relativistic time transformations using the INPOP ephemerides.  

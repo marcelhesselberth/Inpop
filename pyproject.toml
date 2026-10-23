@@ -24,6 +24,7 @@ dependencies = [
   "numpy>1.21",
   "numba>0.56",
 ]
+
 [project.urls]
 Homepage = "https://github.com/hesselberth/Inpop"
 Issues = "https://github.com/hesselberth/Inpop/issues"
@@ -32,3 +33,6 @@ Pypi = "https://pypi.org/project/Inpop/"
 
 [tool.hatch.build.targets.wheel]
 packages = ["inpop"]
+
+[tool.setuptools.packages.find]
+exclude = ["tests*"]

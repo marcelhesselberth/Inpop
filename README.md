@@ -1,6 +1,6 @@
 # Inpop
 
-![Python](https://img.shields.io/badge/python-3.8%2B-blue)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![NumPy](https://img.shields.io/badge/dependency-numpy-orange)
 ![License](https://img.shields.io/badge/license-GPLv3-green)
 ![Status](https://img.shields.io/badge/status-stable-brightgreen)
@@ -35,7 +35,7 @@ If the file is not found locally, the Inpop library will attempt to download it 
 
 ## Requirements
 
-- Python 3.8+  
+- Python 3.10+  
 - [NumPy](https://numpy.org/)  
 - [Numba](https://numba.pydata.org/) (optional, for just-in-time acceleration when loading data into memory)  
 

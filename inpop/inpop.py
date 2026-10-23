@@ -10,7 +10,7 @@ Created on Fri Dec  4 14:16:35 2024
 Version: 1.0 (stable). 
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 
 from .constants import Lb, LKb, T0, TDB0_jd
@@ -679,8 +679,13 @@ class Inpop:
 
         # Relativistic and unit conversions
         result = target - center
-        result[0] *= gr_pos_factor * self.unit_factor
-        result[1, ...] *= self.unit_factor
+        
+        if rate:
+            result[0] *= gr_pos_factor * self.unit_factor
+            result[1] *= self.unit_factor
+        else:
+            result *= gr_pos_factor * self.unit_factor
+
         return result
 
     def LBR(self, jd, rate=True, **kwargs):

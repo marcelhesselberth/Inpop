@@ -30,7 +30,7 @@ def test_config():
     base_url = config["ftp"]["base_url"]
     assert(ext=="dat")
     assert("inpop" in default)
-    assert(base_url[:8]=="https://" and base_url[-1] == "/")
+    assert(base_url[:6]=="ftp://" and base_url[-1] == "/")
     
     
 def test_bad_file():  # not found but contains path.sep

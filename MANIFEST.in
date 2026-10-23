@@ -1,2 +1,4 @@
 prune */__pycache__
 prune */*.dat
+prune tests
+

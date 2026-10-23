@@ -33,6 +33,11 @@ Pypi = "https://pypi.org/project/Inpop/"
 
 [tool.hatch.build.targets.wheel]
 packages = ["inpop"]
+exclude = ["/tests"]
 
-[tool.setuptools.packages.find]
-exclude = ["tests*"]
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "/tests",
+]
+
+

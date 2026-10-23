@@ -58,9 +58,8 @@ def test_rate():
     ref = inpop.PV(JD2000, "Saturn", "Earth", rate = True)
     assert(ref.shape == (2,3))
     ref = inpop.PV(JD2000, "Saturn", "Earth", rate = False)
-    print("pos", ref)
     assert(ref.shape == (3,))
-    inpop.close()    
+    inpop.close()
 
 
 def test_target_center_string():
@@ -86,3 +85,31 @@ def test_ts_arg():
     assert(((pv - ref) < 1e-8).all())
     with pytest.raises(ValueError) as excinfo:
         pv  = inpop.PV(JD2000, "Saturn", "Earth", ts="TCG")
+
+def test_p_pv_equal():  # tests example contributed by dlakaplan
+    inpop = Inpop(filename)
+    target = "mercury"
+    center = "venus"
+    P = inpop.PV((2414105.0, 0.0), target, center, False)
+    PV = inpop.PV((2414105.0, 0.0), target, center, True)
+    assert((PV[0] == P).all())  # shapes already checked in test_rate
+
+def test_rate_SSB():
+    inpop = Inpop(filename)
+    ref = inpop.PV(JD2000, "Saturn", "SSB", rate = True)
+    assert(ref.shape == (2,3))
+    ref = inpop.PV(JD2000, "Saturn", "SSB", rate = False)
+    assert(ref.shape == (3,))
+    ref = inpop.PV(JD2000, "SSB", "Saturn", rate = True)
+    assert(ref.shape == (2,3))
+    ref = inpop.PV(JD2000, "SSB", "Saturn", rate = False)
+    assert(ref.shape == (3,))
+    inpop.close()
+    
+def test_rate_t_eq_c():
+    inpop = Inpop(filename)
+    ref = inpop.PV(JD2000, "Venus", "Venus", rate = True)
+    assert(ref.shape == (2,3))
+    ref = inpop.PV(JD2000, "Venus", "Venus", rate = False)
+    assert(ref.shape == (3,))
+    inpop.close()

@@ -451,7 +451,7 @@ class Inpop:
                     Date in ephemeris time.
         coeff_ptr : ndarray(dtype=int)
                     offset, ncoeffs, ngranules
-                    record offset, number of Chebyshev coefficients number of
+                    record offset, number of Chebyshev coefficients, number of
                     granules
         rate:       bool
                     Whether to return only the value (position, angle, time)
@@ -460,7 +460,7 @@ class Inpop:
 
         Returns
         -------
-        2x3 matrix pos, vel or (if rate=False) 3-vector pos.
+        2x3 matrix pos, vel or (if rate==False) a 3-vector pos.
 
         """
         jd = jd1 + jd2
@@ -643,7 +643,10 @@ class Inpop:
 
         # Decode and compute special cases for earth, moon, emb, ssb
         if t == c:
-            return np.zeros(6).reshape((2, 3))
+            if rate:
+                return np.zeros(6).reshape((2, 3))
+            else:
+                return np.zeros(3)
 
         match t:
             case 2:
@@ -655,7 +658,10 @@ class Inpop:
                     * self.moonfactor \
                     + self.calc(jd1, jd2, self.coeff_ptr[2], rate)
             case 11:
-                target = np.zeros(6).reshape((2, 3))
+                if rate:
+                    target = np.zeros(6).reshape((2, 3))
+                else:
+                    target = np.zeros(3)
             case 12:
                 target = self.calc(jd1, jd2, self.coeff_ptr[2], rate)
             case _:
@@ -671,7 +677,10 @@ class Inpop:
                     * self.moonfactor \
                     + self.calc(jd1, jd2, self.coeff_ptr[2], rate)
             case 11:
-                center = np.zeros(6).reshape((2, 3))
+                if rate:
+                    center = np.zeros(6).reshape((2, 3))
+                else:
+                    center = np.zeros(3)
             case 12:
                 center = self.calc(jd1, jd2, self.coeff_ptr[2], rate)
             case _:
